@@ -1,0 +1,199 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: vote-app-voting
+objects:
+- apiVersion: v1
+  kind: Route
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+      openshift.io/host.generated: "true"
+    creationTimestamp: null
+    labels:
+      app: voting-app
+    name: voting-app
+  spec:
+    port:
+      targetPort: 8080-tcp
+    to:
+      kind: Service
+      name: voting-app
+      weight: 100
+    wildcardPolicy: None
+  status: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+    creationTimestamp: null
+    labels:
+      app: voting-app
+    name: voting-app
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      deploymentconfig: voting-app
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftWebConsole
+    creationTimestamp: null
+    generation: 1
+    labels:
+      app: voting-app
+    name: voting-app
+  spec:
+    replicas: 1
+    selector:
+      deploymentconfig: voting-app
+    strategy:
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: voting-app
+          deploymentconfig: voting-app
+      spec:
+        containers:
+        - image: ""
+          imagePullPolicy: Always
+          name: voting-app
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "redis"
+                  key: database-password
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    test: false
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - voting-app
+        from:
+          kind: ImageStreamTag
+          name: voting-app:latest
+      type: ImageChange
+    - type: ConfigChange
+  status: {}
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: voting-app
+    name: voting-app
+  spec:
+    nodeSelector: null
+    output:
+      to:
+        kind: ImageStreamTag
+        name: voting-app:latest
+    postCommit: {}
+    resources:
+      limits:
+        cpu: 731m
+        memory: 1Gi
+      requests:
+        cpu: 18m
+        memory: 256Mi
+    runPolicy: Serial
+    source:
+      contextDir: /voting-app
+      git:
+        uri: 'https://github.com/juniorjbn/demo-voting-ops.git'
+      type: Git
+    strategy:
+      sourceStrategy:
+        from:
+          kind: ImageStreamTag
+          name: python-27-centos7:latest
+      type: Source
+    triggers:
+    - github:
+        secret: Z1YyzwLOc2KgIMxswo69
+      type: GitHub
+    - generic:
+        secret: In4tCFXzyFGU_Sy6Q9EO
+      type: Generic
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+  status:
+    lastVersion: 0
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    generation: 1
+    labels:
+      app: voting-app
+    name: voting-app
+  spec:
+    tags:
+    - annotations: null
+      from:
+        kind: DockerImage
+        name: voting-app:latest
+      generation: null
+      importPolicy: {}
+      name: latest
+  status:
+    dockerImageRepository: ""
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+      openshift.io/image.dockerRepositoryCheck: 2017-04-10T11:50:12Z
+    creationTimestamp: null
+    generation: 2
+    labels:
+      app: voting-app
+    name: python-27-centos7
+  spec:
+    tags:
+    - annotations:
+        openshift.io/imported-from: centos/python-27-centos7
+      from:
+        kind: DockerImage
+        name: centos/python-27-centos7:latest
+      generation: 2
+      importPolicy: {}
+      name: latest
+  status:
+    dockerImageRepository: ""
+
