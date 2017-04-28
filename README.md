@@ -1,38 +1,43 @@
-# Demo for Voting app on top of OpenShift
+Example Voting App On Openshift
+=========
 
-It comprises of 3 repos:
+Getting started
+---------------
 
-* https://github.com/containers-prague/demo-result-app/
-* https://github.com/containers-prague/demo-voting-app/
-* https://github.com/containers-prague/demo-worker/
-
-Each represents a container which serves single purpose:
-
-* Result App - displays results from Postgres
-* Voting App - let's people vote and stores in Redis
-* Worker - processes queue in Redis and pushes data to Postgres
-
-Other (already mentioned) containers in the system are:
-
-* Redis - queue of votes
-* Postgres - "permanent" sotrage of results
-
-This is based on https://github.com/alexvanboxel/k8s-docker-vote and addapted to work well with OpenShift
-
-# How to Run
-
-1. Login in to OpenShift and create a project
-2. Run `./deploy.sh`
-3. A lot of resources should be created in OpenShift
-4. Watch whole app start
-5. Vote;)
-
-To try Blue/Green deployment of `voting-app`, run `./deploy.sh blue-green`
-
-# Ops Details
-
-All images are built in OpenShift with use of s2i builds. All deployments are then triggered by new build. You can automate builds by using webhooks - e.g.
-
+Access your environment with Openshift CLI (OC):
 ```
-oc describe bc voting-app-worker | grep generic | grep URL | sed 's/\s*URL:\s*//'
+oc login https://api.getupcloud.com:443 
 ```
+
+And access your project 
+```
+oc project <Name>
+```
+
+Run in this directory:
+```
+./deploy.sh
+```
+
+This will create all apps, redis and postgresql.
+
+
+Architecture
+-----
+
+![Architecture diagram](architecture.png)
+
+* A Python webapp which lets you vote between two options
+* A Redis queue which collects new votes
+* A Java worker which consumes votes and stores them in…
+* A Postgres database backed by a Docker volume
+* A Node.js webapp which shows the results of the voting in real time
+
+
+Note
+----
+
+The voting application only accepts one vote per client. It does not register votes if a vote has already been submitted from a client, but you can always change your vote. (or open a Incognito Tab :)
+
+
+And that's it, like magic !!
